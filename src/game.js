@@ -38,7 +38,7 @@ class Game {
         this.enemies.move(dt, this.player.position);
         this.checkProjectileEnemyCollisions();
 
-        this.spawnNewProjectile(mousePosition);
+        this.spawnNewProjectile(dt, mousePosition);
         this.spawnNewEnemy();
 
         this.projectiles.removeDeadProjectiles(this.canvasSize);
@@ -74,10 +74,10 @@ class Game {
         }
     }
 
-    spawnNewProjectile(mousePosition) {
+    spawnNewProjectile(dt, mousePosition) {
         let position = this.player.position;
         let direction = vunit(vsub(new V2(mousePosition.x, mousePosition.y), position));
-        this.projectiles.spawnProjectile(position, direction);
+        this.projectiles.spawnProjectile(position, direction, dt);
     }
 
     spawnNewEnemy() {

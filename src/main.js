@@ -12,7 +12,7 @@ window.onload = () => {
 
     let player = new Player(new V2(canvasSize.x / 2, canvasSize.y / 2), 30, 0.002,
                                     "#58D68D", "#28B463");;
-    let projectilePool = new ProjectilePool(10, 0.001, "#5DADE2", "#3498DB");
+    let projectilePool = new ProjectilePool(10, 1.5, "#5DADE2", "#3498DB");
     let enemyPool = new EnemyPool(30, 25, 0.002, "#D98880", "#A93226");
     let game = new Game(canvasSize, player, projectilePool, enemyPool);
 

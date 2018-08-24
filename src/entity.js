@@ -58,18 +58,17 @@ class Player extends GameEntity {
 
 class Projectile extends GameEntity {
 
-    constructor(id, position, radius, direction, acceleration, innerColor, borderColor) {
+    constructor(id, position, radius, direction, speed, innerColor, borderColor) {
         super(position, radius, innerColor, borderColor, 2);
 
         this.getId = () => id;
-        this.position = position
-        this.velocity = new V2()
-        this.acceleration = vmult(direction, acceleration);
+        this.position = position;
+        this.speed = speed;
+        this.direction = direction;
     }
 
     update(dt) {
-        this.velocity = vadd(vmult(this.acceleration, dt), this.velocity);
-        this.position = vadd(vmult(this.velocity, 0.5 * dt * dt), this.position);
+        this.position = vadd(this.position, vmult(this.direction, this.speed * dt));
     }
 }
 
@@ -78,7 +77,6 @@ class Enemy extends GameEntity {
     constructor(id, position, radius, acceleration, innerColor, borderColor) {
         super(position, radius, innerColor, borderColor, 2);
 
-        // this.acceleration = 0.003;
         this.acceleration = acceleration;
         this.getId     = () => id;
         this.direction = new V2();
@@ -115,27 +113,41 @@ class EntityIterator {
 }
 
 class ProjectilePool {
-    constructor(radius, acceleration, innerColor, borderColor) {
+    constructor(radius, speed, innerColor, borderColor) {
         let idCounter    = 0;
         this.createNewId = () => idCounter++;
 
-        this.projectiles  = [];
-        this.radius       = radius;
-        this.acceleration = acceleration;
-        this.innerColor   = innerColor;
-        this.borderColor  = borderColor;
+        this.projectiles        = [];
+        this.radius             = radius;
+        this.speed              = speed;
+        this.innerColor         = innerColor;
+        this.borderColor        = borderColor;
+        this.newProjectileTimer = 0;
+        this.spawnIntervalInMs  = 40;
     }
 
     move(dt) {
         this.projectiles.forEach((p) => p.update(dt))
     }
 
-    spawnProjectile(position, direction) {
-        let randomTilt = degToRad(15 * (-0.5 + Math.random())); 
-        direction = rotate(direction, randomTilt);
-        this.projectiles.push(new Projectile(this.createNewId(), 
-                                             position, this.radius, direction, this.acceleration,
-                                             this.innerColor, this.borderColor));
+    spawnProjectile(position, direction, dt) {
+        if(this.newProjectileIsReady(dt)) {
+            let randomTilt = degToRad(15 * (-0.5 + Math.random())); 
+            direction = rotate(direction, randomTilt);
+            this.projectiles.push(new Projectile(this.createNewId(), position,
+                                                 this.radius, direction, this.speed,
+                                                 this.innerColor, this.borderColor));
+        }
+    }
+
+    newProjectileIsReady(dt) {
+        this.newProjectileTimer += dt;
+        if(this.newProjectileTimer >= this.spawnIntervalInMs) {
+            this.newProjectileTimer = 0;
+            return true;
+        }
+        else
+            return false;
     }
 
     render(context, canvasSize) {
