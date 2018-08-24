@@ -32,6 +32,7 @@ class Player extends GameEntity {
         super(position, radius, innerColor, borderColor, 3);
 
         this.acceleration = acceleration;
+        this.initPosition = position
     }
 
     move(dt, direction, gameBound) {
@@ -53,6 +54,10 @@ class Player extends GameEntity {
             this.position.y = radius;
         else if (this.position.y > gameBound.y - radius)
             this.position.y = gameBound.y - radius;
+    }
+
+    die() {
+        this.position = this.initPosition;
     }
 }
 
