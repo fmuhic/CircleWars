@@ -1,5 +1,6 @@
 class GameEntity {
     constructor(position, radius, innerColor, borderColor, borderSize) {
+        //Todo: fix this acceleration (in player reset method too) 
         this.acceleration = 0.003;
         this.velocity    = new V2();
         this.position    = position;
@@ -57,6 +58,8 @@ class Player extends GameEntity {
     }
 
     die() {
+        this.velocity = new V2();
+        this.acceleration = 0.003;
         this.position = this.initPosition;
     }
 }
@@ -173,6 +176,10 @@ class ProjectilePool {
         });
     }
 
+    empty() {
+        this.projectiles = [];
+    }
+
     getIterator() {
         return new EntityIterator(this.projectiles, this.projectiles.length);
     }
@@ -229,6 +236,10 @@ class EnemyPool {
         });
 
         this.enemyCount = this.enemies.length;
+    }
+
+    empty() {
+        this.enemies = [];
     }
 
     getIterator() {

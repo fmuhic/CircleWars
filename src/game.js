@@ -34,15 +34,17 @@ class Game {
     updateState(dt, mousePosition) {
         this.player.move(dt, this.moveDirection, this.canvasSize);
 
-        this.projectiles.move(dt)
-        this.enemies.move(dt, this.player.position);
-        this.checkProjectileEnemyCollisions();
+        this.projectiles.removeDeadProjectiles(this.canvasSize);
+        this.enemies.removeDeadEnemies();
 
         this.spawnNewProjectile(dt, mousePosition);
         this.spawnNewEnemy();
 
-        this.projectiles.removeDeadProjectiles(this.canvasSize);
-        this.enemies.removeDeadEnemies();
+        this.projectiles.move(dt)
+        this.enemies.move(dt, this.player.position);
+
+        this.checkProjectileEnemyCollisions();
+        this.checkPlayerEnemyCollision();
     }
 
     renderFrame(context) {
@@ -72,6 +74,25 @@ class Game {
                 }
             }
         }
+    }
+
+    checkPlayerEnemyCollision() {
+        let eIter = this.enemies.getIterator(); 
+        
+        let e = null;
+        while(e = eIter.getNext()) {
+            let result = checkCollision(this.player, e);
+            if(result.collided) {
+                this.player.die();
+                this.resetState();
+                return;
+            }
+        }
+    }
+
+    resetState() {
+        this.projectiles.empty();
+        this.enemies.empty();
     }
 
     spawnNewProjectile(dt, mousePosition) {
