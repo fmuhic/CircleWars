@@ -8,5 +8,5 @@ How to run:
 
 Todo:
 - Physics improvements and optimizations
-- Particle system (bettert death animatios)
-- Beter AI (Projectile dodging and better spawn positions)
+- Particle system (better death animatios)
+- Better AI (Projectile dodging and better spawn positions)
