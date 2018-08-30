@@ -1,6 +1,6 @@
 class GameEntity {
     constructor(position, radius, innerColor, borderColor, borderSize) {
-        //Todo: fix this acceleration (in player reset method too) 
+        //Todo: fix this acceleration (in player reset method too)
         this.acceleration = 0.003;
         this.velocity    = new V2();
         this.position    = position;
@@ -24,6 +24,49 @@ class GameEntity {
 
     die() {
         this.isAlive = false;
+    }
+}
+
+class EntityIterator {
+    constructor(entities, entityCount) {
+        this.entities     = entities;
+        this.count        = entityCount;
+        this.currentIndex = 0;
+    }
+
+    getNext() {
+        if(this.currentIndex >= this.count)
+            return null;
+
+        return this.entities[this.currentIndex++];
+    }
+
+    reset() {
+        this.currentIndex = 0;
+    }
+}
+
+
+class Particle extends GameEntity {
+    constructor(position, direction, radius, acceleration, innerColor, borderColor) {
+        super(position, radius, innerColor, borderColor, 2);
+
+        this.acceleration = acceleration;
+        this.initPosition = position
+        this.direction    = direction
+        this.lifeLength   = 1500;
+        this.ageInMs      = 0;
+        this.opacity      = 100;
+    }
+
+    update(dt) {
+        let acceleration = vmult(this.direction, this.acceleration);
+        this.velocity = vadd(vmult(acceleration, dt), this.velocity);
+        this.position = vadd(vmult(this.velocity, 0.5 * dt * dt), this.position);
+
+        //nasty hack that simulates friction (only valid at 5ms update interval)
+        this.velocity = vadd(this.velocity, vmult(this.velocity, -0.04));
+        this.ageInMs += dt;
     }
 }
 
@@ -101,24 +144,61 @@ class Enemy extends GameEntity {
     }
 }
 
-class EntityIterator {
-    constructor(entities, entityCount) {
-        this.entities     = entities;
-        this.count        = entityCount;
-        this.currentIndex = 0;
+class ParticlePool {
+    constructor() {
+        this.particles = []
+        this.deadEnemyPaticleCount = 15;
+        this.deadEnemyParticleRadius = 2.5;
+        this.innerColor = "#D98880";
+        this.borderColor = "#CD6155";
     }
 
-    getNext() {
-        if(this.currentIndex >= this.count)
-            return null;
-            
-        return this.entities[this.currentIndex++];
+    addDeadEnemiesParticles(deadEnemies) {
+        let self = this;
+        let particles = deadEnemies.map((e) => {
+            let ps = []
+            for(let i = 0; i < self.deadEnemyPaticleCount; i++) {
+                let randomTilt = degToRad(360 * (-0.5 + Math.random()));
+                let direction = new V2(1, 0);
+                direction = rotate(direction, randomTilt);
+
+                ps.push(new Particle(e.position, direction, self.deadEnemyParticleRadius,
+                                     0.001, this.innerColor, this.borderColor));
+            }
+
+            return ps;
+        });
+
+        this.particles = this.particles.concat(particles.reduce((a, b) => a.concat(b), []));
     }
 
-    reset() {
-        this.currentIndex = 0;
+    addParticle(position, radius, acceleration, innerColor, borderColor) {
+        direction = new V2(1, 0);
+        this.particles.push(new Particle(position, direction, radius,
+                            acceleration, innerColor, borderColor));
+    }
+
+    removeDeadParticles() {
+        this.particles = this.particles.filter((p) => p.ageInMs < p.lifeLength);
+    }
+
+    update(dt) {
+        this.particles.forEach((p) => p.update(dt))
+    }
+
+    render(context, canvasSize) {
+        this.particles.forEach((p) => p.render(context, canvasSize));
+    }
+
+    getIterator() {
+        return new EntityIterator(this.particles, this.particles.length);
+    }
+
+    empty() {
+        this.particles = [];
     }
 }
+
 
 class ProjectilePool {
     constructor(radius, speed, innerColor, borderColor) {
@@ -140,7 +220,7 @@ class ProjectilePool {
 
     spawnProjectile(position, direction, dt) {
         if(this.newProjectileIsReady(dt)) {
-            let randomTilt = degToRad(15 * (-0.5 + Math.random())); 
+            let randomTilt = degToRad(15 * (-0.5 + Math.random()));
             direction = rotate(direction, randomTilt);
             this.projectiles.push(new Projectile(this.createNewId(), position,
                                                  this.radius, direction, this.speed,
@@ -171,7 +251,7 @@ class ProjectilePool {
         this.projectiles = this.projectiles.filter((p) => {
             if(isOutOfBounds(p, gameBound) || !p.isAlive)
                 return false;
-            else 
+            else
                 return true;
         });
     }
@@ -205,7 +285,7 @@ class EnemyPool {
 
     spawnEnemy(position) {
         if(this.enemyCount < this.maxEnemyCount) {
-            this.enemies.push(new Enemy(this.createNewId(), 
+            this.enemies.push(new Enemy(this.createNewId(),
                                         position, this.radius, this.acceleration,
                                         this.innerColor, this.borderColor));
             this.enemyCount++;
@@ -228,6 +308,8 @@ class EnemyPool {
     }
 
     removeDeadEnemies() {
+        let deadEnemies =  this.enemies.filter((e) => !e.isAlive);
+
         this.enemies = this.enemies.filter((e) => {
             if(e.isAlive)
                 return true;
@@ -236,6 +318,7 @@ class EnemyPool {
         });
 
         this.enemyCount = this.enemies.length;
+        return deadEnemies;
     }
 
     empty() {

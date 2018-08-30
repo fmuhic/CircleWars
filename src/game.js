@@ -1,9 +1,10 @@
 class Game {
 
-    constructor(canvasSize, player, projectilePool, enemyPool) {
+    constructor(canvasSize, player, projectilePool, enemyPool, particlePool) {
 
         this.player        = player;
         this.projectiles   = projectilePool;
+        this.particles     = particlePool;
         this.enemies       = enemyPool;
         this.canvasSize    = canvasSize;
         this.moveDirection = new V2();
@@ -35,7 +36,11 @@ class Game {
         this.player.move(dt, this.moveDirection, this.canvasSize);
 
         this.projectiles.removeDeadProjectiles(this.canvasSize);
-        this.enemies.removeDeadEnemies();
+        let deadEnemies = this.enemies.removeDeadEnemies();
+
+        this.particles.addDeadEnemiesParticles(deadEnemies);
+        this.particles.removeDeadParticles();
+        this.particles.update(dt);
 
         this.spawnNewProjectile(dt, mousePosition);
         this.spawnNewEnemy();
@@ -51,9 +56,10 @@ class Game {
         // Clear screen
         context.clearRect(0, 0, this.canvasSize.x, this.canvasSize.y);
 
-        this.projectiles.render(context, this.canvasSize)
-        this.enemies.render(context, this.canvasSize)
+        this.projectiles.render(context, this.canvasSize);
+        this.enemies.render(context, this.canvasSize);
         this.player.render(context, this.canvasSize);
+        this.particles.render(context, this.canvasSize);
     }
 
     // This is brute force (n^2) collision check. 
@@ -93,6 +99,7 @@ class Game {
     resetState() {
         this.projectiles.empty();
         this.enemies.empty();
+        this.particles.empty();
     }
 
     spawnNewProjectile(dt, mousePosition) {

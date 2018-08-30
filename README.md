@@ -13,5 +13,5 @@ How to play:
 
 Todo:
 - Physics improvements and optimizations
-- Particle system (better death animatios)
+- Improve and optimize particle system (better death animatios)
 - Better AI (Projectile dodging and better spawn positions)

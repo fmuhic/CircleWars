@@ -13,8 +13,9 @@ window.onload = () => {
     let player = new Player(new V2(canvasSize.x / 2, canvasSize.y / 2), 30, 0.002,
                                     "#58D68D", "#28B463");;
     let projectilePool = new ProjectilePool(10, 1.5, "#5DADE2", "#3498DB");
-    let enemyPool = new EnemyPool(30, 25, 0.002, "#D98880", "#A93226");
-    let game = new Game(canvasSize, player, projectilePool, enemyPool);
+    let enemyPool = new EnemyPool(30, 25, 0.001, "#D98880", "#A93226");
+    let particlePool = new ParticlePool();
+    let game = new Game(canvasSize, player, projectilePool, enemyPool, particlePool);
 
     // Process mouse input
     let mousePosition = new V2();
